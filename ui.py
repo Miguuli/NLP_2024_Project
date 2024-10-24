@@ -1,7 +1,6 @@
 import sys
-import nltk_proj
-from nltk_proj import summarize_text
-from PyQt6.QtCore import QSize, Qt, QStringListModel
+
+from PyQt6.QtCore import QStringListModel
 from PyQt6.QtWidgets import (
     QApplication,
     QLineEdit,
@@ -12,11 +11,9 @@ from PyQt6.QtWidgets import (
     QScrollArea,
     QScrollBar,
     QListView,
-    QLayout,
-    QLayoutItem,
     QSplitter
 )
-from PyQt6.QtGui import QTextList, QTextItem
+from nltk_proj import summarize_text, summarize_from_file
 
 # Example usage
 document = """
@@ -24,18 +21,17 @@ Natural language processing is a subfield of artificial intelligence (AI) focuse
 """
 
 items = []
-
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-
+        self.current_file_text = ""
         self.setWindowTitle("SummarizerGUI")
         self.model = QStringListModel(items)
         splitter = QSplitter()
-        list = QListView(splitter)
-        list.setModel(self.model)
-        list.show()
+        self.list = QListView(splitter)
+        self.list.setModel(self.model)
+        self.list.show()
 
         layout = QVBoxLayout()
         button = QPushButton("Summarize sample doc")
@@ -47,7 +43,7 @@ class MainWindow(QMainWindow):
         button3 = QPushButton("Summarize link content")
 
         line_edit = QLineEdit()
-        line_edit.setMaxLength(10)
+        line_edit.setMaxLength(100)
         line_edit.setPlaceholderText("Enter file name")
         line_edit.returnPressed.connect(self.return_pressed)
         line_edit.selectionChanged.connect(self.selection_changed)
@@ -62,19 +58,19 @@ class MainWindow(QMainWindow):
         line_edit2.textChanged.connect(self.text_changed2)
         line_edit2.textEdited.connect(self.text_edited2)
 
-        scrollArea = QScrollArea()
-        scrollBar = QScrollBar()
-        scrollArea.setWidget(scrollBar)
-        scrollArea.setWidgetResizable(True)
-        scrollArea.viewport().setUpdatesEnabled(True)
-        scrollArea.setWidget(list)
+        self.scrollArea = QScrollArea()
+        self.scrollBar = QScrollBar()
+        self.scrollArea.setWidget(self.scrollBar)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.viewport().setUpdatesEnabled(True)
+        self.scrollArea.setWidget(self.list)
 
         layout.addWidget(button)
         layout.addWidget(line_edit)
         layout.addWidget(button2)
         layout.addWidget(line_edit2)
         layout.addWidget(button3)
-        layout.addWidget(scrollArea)
+        layout.addWidget(self.scrollArea)
 
         widget = QWidget()
         widget.setLayout(layout)
@@ -83,18 +79,23 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(widget)
 
     def the_button_was_clicked(self):
-        self.model.modelReset
         summaries = summarize_text(document)
-        summaries_list = []
         for name, summary in summaries.items():
             print(f"\n{name} Summary:")
             print(summary)
-            summaries_list.append(name + ":\n" + summary)
-        self.model.setStringList(summaries_list)
+            items.append(name + ":\n" + summary)
+        self.model.setStringList(items)
+        self.list.scrollToBottom()
 
     def return_pressed(self):
         print("Return pressed!")
-        #self.centralWidget().setText("BOOM!")
+        summaries = summarize_from_file(self.current_file_text, 3)
+        for name, summary in summaries.items():
+            print(f"\n{name} Summary:")
+            print(summary)
+            items.append(name + ":\n" + summary)
+        self.model.setStringList(items)
+        self.list.scrollToBottom()
 
     def selection_changed(self):
         print("Selection changed")
@@ -107,6 +108,7 @@ class MainWindow(QMainWindow):
     def text_edited(self, s):
         print("Text edited...")
         print(s)
+        self.current_file_text = s
 
     def return_pressed2(self):
         print("Return pressed!")

@@ -1,7 +1,7 @@
 import sys
 import nltk_proj
 from nltk_proj import summarize_text
-from PyQt6.QtCore import QSize, Qt
+from PyQt6.QtCore import QSize, Qt, QStringListModel
 from PyQt6.QtWidgets import (
     QApplication,
     QLineEdit,
@@ -9,13 +9,21 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QVBoxLayout,
     QWidget,
+    QScrollArea,
+    QScrollBar,
+    QListView,
+    QLayout,
+    QLayoutItem,
+    QSplitter
 )
+from PyQt6.QtGui import QTextList, QTextItem
 
 # Example usage
 document = """
 Natural language processing is a subfield of artificial intelligence (AI) focused on the interaction between computers and humans through natural language. The ultimate objective of NLP is to enable computers to understand, interpret, and generate human languages in a way that is both valuable and meaningful. NLP is used to apply algorithms to identify and extract the natural language rules such that the unstructured language data is converted into a form that computers can understand.
 """
 
+items = []
 
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
@@ -23,6 +31,12 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("SummarizerGUI")
+        self.model = QStringListModel(items)
+        splitter = QSplitter()
+        list = QListView(splitter)
+        list.setModel(self.model)
+        list.show()
+
         layout = QVBoxLayout()
         button = QPushButton("Summarize sample doc")
         #button.setCheckable(True)
@@ -48,11 +62,19 @@ class MainWindow(QMainWindow):
         line_edit2.textChanged.connect(self.text_changed2)
         line_edit2.textEdited.connect(self.text_edited2)
 
+        scrollArea = QScrollArea()
+        scrollBar = QScrollBar()
+        scrollArea.setWidget(scrollBar)
+        scrollArea.setWidgetResizable(True)
+        scrollArea.viewport().setUpdatesEnabled(True)
+        scrollArea.setWidget(list)
+
         layout.addWidget(button)
         layout.addWidget(line_edit)
         layout.addWidget(button2)
         layout.addWidget(line_edit2)
         layout.addWidget(button3)
+        layout.addWidget(scrollArea)
 
         widget = QWidget()
         widget.setLayout(layout)
@@ -61,10 +83,14 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(widget)
 
     def the_button_was_clicked(self):
+        self.model.modelReset
         summaries = summarize_text(document)
+        summaries_list = []
         for name, summary in summaries.items():
             print(f"\n{name} Summary:")
             print(summary)
+            summaries_list.append(name + ":\n" + summary)
+        self.model.setStringList(summaries_list)
 
     def return_pressed(self):
         print("Return pressed!")

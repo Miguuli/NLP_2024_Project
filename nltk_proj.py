@@ -56,7 +56,7 @@ def summarize_from_url(url, num_sentences=3):
         text = ' '.join([p.get_text() for p in paragraphs])
         
         # Limit the text to the first 1000 words for faster processing
-        text = ' '.join(text.split()[:1000])
+        text = ' '.join(text.split()[:10000])
         
         return summarize_text(text, num_sentences)
     except requests.exceptions.RequestException as e:

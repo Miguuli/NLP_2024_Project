@@ -14,7 +14,6 @@ from rouge import Rouge
 import numpy as np
 import spacy
 import nltk
-from newspaper import Article
 
 
 nltk.download('punkt', quiet=True)

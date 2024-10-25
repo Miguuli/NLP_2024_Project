@@ -1,7 +1,9 @@
 import sys
 
-from PyQt6.QtCore import QStringListModel
-from PyQt6.QtWidgets import (
+from PySide6 import QtAsyncio
+from PySide6.QtAsyncio import asyncio
+from PySide6.QtCore import QStringListModel
+from PySide6.QtWidgets import (
     QApplication,
     QLineEdit,
     QMainWindow,
@@ -27,48 +29,61 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.current_file_text = ""
+        self.current_url_text = ""
         self.setWindowTitle("SummarizerGUI")
         self.model = QStringListModel(items)
-
-        # Create main layout
-        main_layout = QVBoxLayout()
-
-        # Sample document section
-        sample_button = QPushButton("Summarize sample doc")
-        sample_button.clicked.connect(self.the_button_was_clicked)
-        main_layout.addWidget(sample_button)
-
-        # File summarization section
-        file_layout = QHBoxLayout()
-        self.file_input = QLineEdit()
-        self.file_input.setPlaceholderText("Enter file name")
-        file_button = QPushButton("Summarize text file")
-        file_button.clicked.connect(self.summarize_file)
-        file_layout.addWidget(self.file_input)
-        file_layout.addWidget(file_button)
-        main_layout.addLayout(file_layout)
-
-        # URL summarization section
-        url_layout = QHBoxLayout()
-        self.url_input = QLineEdit()
-        self.url_input.setPlaceholderText("Enter link url")
-        url_button = QPushButton("Summarize link content")
-        url_button.clicked.connect(self.summarize_url)
-        url_layout.addWidget(self.url_input)
-        url_layout.addWidget(url_button)
-        main_layout.addLayout(url_layout)
 
         # Results display
         self.list = QListView()
         self.list.setModel(self.model)
-        main_layout.addWidget(self.list)
 
-        # Set up central widget
-        central_widget = QWidget()
-        central_widget.setLayout(main_layout)
-        self.setCentralWidget(central_widget)
+        layout = QVBoxLayout()
+        button = QPushButton("Summarize sample doc")
+        button.clicked.connect(self.summarize_sample_doc_clicked)
 
-    def the_button_was_clicked(self):
+        button2 = QPushButton("Summarize text file")
+        button2.clicked.connect(self.summarize_file_doc_clicked)
+
+        button3 = QPushButton("Summarize link content")
+        button3.clicked.connect(lambda: asyncio.ensure_future(self.summarize_url_clicked()))
+
+        line_edit = QLineEdit()
+        line_edit.setMaxLength(100)
+        line_edit.setPlaceholderText("Enter file name")
+        line_edit.returnPressed.connect(self.file_text_return_pressed)
+        #line_edit.selectionChanged.connect(self.file_text_selection_changed)
+        line_edit.textChanged.connect(self.file_text_changed)
+        line_edit.textEdited.connect(self.file_text_edited)
+
+        line_edit2 = QLineEdit()
+        line_edit2.setMaxLength(100)
+        line_edit2.setPlaceholderText("Enter link url")
+        line_edit2.returnPressed.connect(self.url_text_return_pressed)
+        #line_edit2.selectionChanged.connect(self.url_text_selection_changed)
+        line_edit2.textChanged.connect(self.url_text_changed)
+        line_edit2.textEdited.connect(self.url_text_edited)
+
+        self.scrollArea = QScrollArea()
+        self.scrollBar = QScrollBar()
+        self.scrollArea.setWidget(self.scrollBar)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.viewport().setUpdatesEnabled(True)
+        self.scrollArea.setWidget(self.list)
+
+        layout.addWidget(button)
+        layout.addWidget(line_edit)
+        layout.addWidget(button2)
+        layout.addWidget(line_edit2)
+        layout.addWidget(button3)
+        layout.addWidget(self.scrollArea)
+
+        widget = QWidget()
+        widget.setLayout(layout)
+
+        # Set the central widget of the Window.
+        self.setCentralWidget(widget)
+
+    def summarize_sample_doc_clicked(self):
         summaries = summarize_text(document)
         self.display_summaries(summaries)
 
@@ -93,8 +108,7 @@ class MainWindow(QMainWindow):
         self.model.setStringList(items)
         self.list.scrollToBottom()
 
-    def return_pressed(self):
-        print("Return pressed!")
+    def summarize_file_doc_clicked(self):
         summaries = summarize_from_file(self.current_file_text, 3)
         for name, summary in summaries.items():
             print(f"\n{name} Summary:")
@@ -105,38 +119,38 @@ class MainWindow(QMainWindow):
         
     
 
-    def selection_changed(self):
-        print("Selection changed")
-        print(self.centralWidget().selectedText())
+    async def summarize_url_clicked(self):
+        await asyncio.sleep(1)
+        summaries = summarize_from_url(self.current_url_text, 3)
+        for name, summary in summaries.items():
+            print(f"\n{name} Summary:")
+            print(summary)
+            items.append(name + ":\n" + summary)
+        self.model.setStringList(items)
+        self.list.scrollToBottom()
 
-    def text_changed(self, s):
-        print("Text changed...")
-        print(s)
+    def file_text_return_pressed(self):
+        pass
 
-    def text_edited(self, s):
-        print("Text edited...")
-        print(s)
+    def file_text_changed(self, s):
         self.current_file_text = s
 
-    def return_pressed2(self):
-        print("Return pressed!")
-        #self.centralWidget().setText("BOOM!")
+    def file_text_edited(self, s):
+        pass
 
-    def selection_changed2(self):
-        print("Selection changed")
-        print(self.centralWidget().selectedText())
+    def url_text_return_pressed(self):
+        pass
 
-    def text_changed2(self, s):
-        print("Text changed...")
-        print(s)
+    def url_text_changed(self, s):
+        self.current_url_text = s
 
-    def text_edited2(self, s):
-        print("Text edited...")
-        print(s)
+    def url_text_edited(self, s):
+        pass
 
 app = QApplication(sys.argv)
 
 window = MainWindow()
 window.show()
+QtAsyncio.run(handle_sigint=True)
 
 app.exec()

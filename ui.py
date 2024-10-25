@@ -16,12 +16,15 @@ from PySide6.QtWidgets import (
     QSplitter,
     QHBoxLayout
 )
-from nltk_proj import summarize_text, summarize_from_file, summarize_from_url
-
+from nltk_proj import (
+    summarize_text, summarize_from_file, summarize_from_url, evaluate_summarizers,
+)
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        # Load the dataset
+        #evaluate_summarizers()
         self.items = []
         self.document = """
             Natural language processing is a subfield of artificial intelligence (AI) focused on the interaction between computers and humans through natural language. The ultimate objective of NLP is to enable computers to understand, interpret, and generate human languages in a way that is both valuable and meaningful. NLP is used to apply algorithms to identify and extract the natural language rules such that the unstructured language data is converted into a form that computers can understand.
@@ -134,3 +137,21 @@ window.show()
 QtAsyncio.run(handle_sigint=True)
 
 app.exec()
+
+# Print results
+#for name, scores in results.items():
+    #print(f"{name} Summarizer:")
+    #print(f"  ROUGE-1: {scores['ROUGE-1']:.4f}")
+    #print(f"  ROUGE-2: {scores['ROUGE-2']:.4f}")
+    #print(f"  ROUGE-L: {scores['ROUGE-L']:.4f}")
+    #print()
+
+# Analysis and comments
+#print("Analysis:")
+#print("1. Performance Comparison:")
+#best_rouge1 = max(results, key=lambda x: results[x]['ROUGE-1'])
+#best_rouge2 = max(results, key=lambda x: results[x]['ROUGE-2'])
+#best_rougel = max(results, key=lambda x: results[x]['ROUGE-L'])
+#print(f"   - Best ROUGE-1 performance: {best_rouge1}")
+#print(f"   - Best ROUGE-2 performance: {best_rouge2}")
+#print(f"   - Best ROUGE-L performance: {best_rougel}")

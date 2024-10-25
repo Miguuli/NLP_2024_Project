@@ -11,9 +11,10 @@ from PyQt6.QtWidgets import (
     QScrollArea,
     QScrollBar,
     QListView,
-    QSplitter
+    QSplitter,
+    QHBoxLayout
 )
-from nltk_proj import summarize_text, summarize_from_file
+from nltk_proj import summarize_text, summarize_from_file, summarize_from_url
 
 # Example usage
 document = """
@@ -28,62 +29,67 @@ class MainWindow(QMainWindow):
         self.current_file_text = ""
         self.setWindowTitle("SummarizerGUI")
         self.model = QStringListModel(items)
-        splitter = QSplitter()
-        self.list = QListView(splitter)
+
+        # Create main layout
+        main_layout = QVBoxLayout()
+
+        # Sample document section
+        sample_button = QPushButton("Summarize sample doc")
+        sample_button.clicked.connect(self.the_button_was_clicked)
+        main_layout.addWidget(sample_button)
+
+        # File summarization section
+        file_layout = QHBoxLayout()
+        self.file_input = QLineEdit()
+        self.file_input.setPlaceholderText("Enter file name")
+        file_button = QPushButton("Summarize text file")
+        file_button.clicked.connect(self.summarize_file)
+        file_layout.addWidget(self.file_input)
+        file_layout.addWidget(file_button)
+        main_layout.addLayout(file_layout)
+
+        # URL summarization section
+        url_layout = QHBoxLayout()
+        self.url_input = QLineEdit()
+        self.url_input.setPlaceholderText("Enter link url")
+        url_button = QPushButton("Summarize link content")
+        url_button.clicked.connect(self.summarize_url)
+        url_layout.addWidget(self.url_input)
+        url_layout.addWidget(url_button)
+        main_layout.addLayout(url_layout)
+
+        # Results display
+        self.list = QListView()
         self.list.setModel(self.model)
-        self.list.show()
+        main_layout.addWidget(self.list)
 
-        layout = QVBoxLayout()
-        button = QPushButton("Summarize sample doc")
-        #button.setCheckable(True)
-        button.clicked.connect(self.the_button_was_clicked)
-
-        button2 = QPushButton("Summarize text file")
-
-        button3 = QPushButton("Summarize link content")
-
-        line_edit = QLineEdit()
-        line_edit.setMaxLength(100)
-        line_edit.setPlaceholderText("Enter file name")
-        line_edit.returnPressed.connect(self.return_pressed)
-        line_edit.selectionChanged.connect(self.selection_changed)
-        line_edit.textChanged.connect(self.text_changed)
-        line_edit.textEdited.connect(self.text_edited)
-
-        line_edit2 = QLineEdit()
-        line_edit2.setMaxLength(100)
-        line_edit2.setPlaceholderText("Enter link url")
-        line_edit2.returnPressed.connect(self.return_pressed2)
-        line_edit2.selectionChanged.connect(self.selection_changed2)
-        line_edit2.textChanged.connect(self.text_changed2)
-        line_edit2.textEdited.connect(self.text_edited2)
-
-        self.scrollArea = QScrollArea()
-        self.scrollBar = QScrollBar()
-        self.scrollArea.setWidget(self.scrollBar)
-        self.scrollArea.setWidgetResizable(True)
-        self.scrollArea.viewport().setUpdatesEnabled(True)
-        self.scrollArea.setWidget(self.list)
-
-        layout.addWidget(button)
-        layout.addWidget(line_edit)
-        layout.addWidget(button2)
-        layout.addWidget(line_edit2)
-        layout.addWidget(button3)
-        layout.addWidget(self.scrollArea)
-
-        widget = QWidget()
-        widget.setLayout(layout)
-
-        # Set the central widget of the Window.
-        self.setCentralWidget(widget)
+        # Set up central widget
+        central_widget = QWidget()
+        central_widget.setLayout(main_layout)
+        self.setCentralWidget(central_widget)
 
     def the_button_was_clicked(self):
         summaries = summarize_text(document)
+        self.display_summaries(summaries)
+
+    def summarize_file(self):
+        file_path = self.file_input.text()
+        if file_path:
+            summaries = summarize_from_file(file_path)
+            self.display_summaries(summaries)
+
+    def summarize_url(self):
+        url = self.url_input.text()
+        if url:
+            summaries = summarize_from_url(url)
+            self.display_summaries(summaries)
+
+    def display_summaries(self, summaries):
+        items.clear()  # Clear previous items
         for name, summary in summaries.items():
             print(f"\n{name} Summary:")
             print(summary)
-            items.append(name + ":\n" + summary)
+            items.append(f"{name}:\n{summary}")
         self.model.setStringList(items)
         self.list.scrollToBottom()
 
@@ -96,6 +102,8 @@ class MainWindow(QMainWindow):
             items.append(name + ":\n" + summary)
         self.model.setStringList(items)
         self.list.scrollToBottom()
+        
+    
 
     def selection_changed(self):
         print("Selection changed")

@@ -1,5 +1,5 @@
 import sys
-
+import named_entity_tagger
 from PySide6 import QtAsyncio
 from PySide6.QtAsyncio import asyncio
 from PySide6.QtCore import QStringListModel
@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 from nltk_proj import (
     summarize_text, summarize_from_file, summarize_from_url, evaluate_summarizers,
 )
+from named_entity_tagger import named_entity_summarization, named_entity_summarization_filtered
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -27,9 +28,12 @@ class MainWindow(QMainWindow):
         #evaluate_summarizers()
         self.items = []
         self.document = """
-            Natural language processing is a subfield of artificial intelligence (AI) focused on the interaction between computers and humans through natural language. The ultimate objective of NLP is to enable computers to understand, interpret, and generate human languages in a way that is both valuable and meaningful. NLP is used to apply algorithms to identify and extract the natural language rules such that the unstructured language data is converted into a form that computers can understand.
+            Natural Language Processing (NLP) is a field of artificial intelligence that focuses on the interaction between computers and humans using natural language. The goal is to enable machines to understand, interpret, and generate human language in a way that is meaningful and useful. NLP combines computational linguistics, rule-based modeling of human language, and machine learning to build models that can process large amounts of natural language data. The primary tasks in NLP range from basic text preprocessing to more complex tasks like language generation and understanding. Text preprocessing involves cleaning and preparing the text for analysis, breaking it into manageable units through tokenization, stemming, lemmatization, stopword removal, and part-of-speech tagging. Once text is preprocessed, syntactic and semantic analysis techniques help machines understand the structure and meaning of sentences, including parsing, dependency parsing, named entity recognition, and word sense disambiguation. Language modeling plays a key role in predicting the next word or phrase in a sentence based on the previous words, and this underpins many NLP applications like text generation, speech recognition, and machine translation. Sentiment analysis identifies the sentiment expressed in a text and is widely used in social media monitoring and customer feedback systems. Automatic text summarization reduces large pieces of text to shorter versions while retaining key information, which can be done through extractive summarization (selecting important sentences or phrases) or abstractive summarization (generating a summary in its own words). Question answering systems are designed to answer human questions based on contextual understanding of text, and they are seen in applications such as search engines and virtual assistants. NLP techniques and models have evolved significantly with the rise of deep learning. Bag of Words is a basic technique for converting text into numerical data, while TF-IDF builds on this by weighting words based on their importance in the text corpus. Word embeddings like Word2Vec, GloVe, and FastText create dense vector representations of words that capture semantic relationships between them. However, the real revolution in NLP came with the introduction of Transformer models. Transformers, like BERT and GPT, are neural networks that excel at understanding complex language patterns and are used in tasks such as text generation, sentiment analysis, and machine translation. Recurrent neural networks (RNNs) and Long Short-Term Memory (LSTM) models were previously dominant for sequence-based NLP tasks but have been largely replaced by Transformer architectures due to their superior ability to capture long-range dependencies in text. NLP is used in a wide variety of applications, from search engines and chatbots to healthcare, legal document analysis, and financial services. Despite these advances, NLP faces challenges such as the inherent ambiguity of human language, the diversity of languages and dialects, and the need for better understanding of context in conversations. Ethical concerns also arise, as NLP systems may perpetuate biases present in the training data. Nevertheless, NLP is transforming industries by enabling machines to interact with humans in more intuitive and effective ways.
         """
-
+        summ = named_entity_summarization(self.document)
+        print(summ)
+        #summ_filtered = named_entity_summarization_filtered(self.document)
+        #print(summ_filtered)
         self.current_file_text = ""
         self.current_url_text = ""
         self.setWindowTitle("SummarizerGUI")

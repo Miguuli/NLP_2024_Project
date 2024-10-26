@@ -21,10 +21,11 @@ def named_entity_summarization(text, num_sentences=3):
     summarization = LsaSummarizer()(parser.document, num_sentences)
     summarization = "\n".join(str(sentence) for sentence in summarization)
 
-    #Filtering the sentences to only include those that contain named entities
-    if any(entity in sentence for entity in named_entities) and sentence not in summarization:
-            summarization += sentence
-            summarization += " "
+    for sentence in sentences:
+        #Filtering the sentences to only include those that contain named entities
+        if any(entity in sentence for entity in named_entities) and sentence not in summarization:
+                summarization += sentence
+        summarization += " "
     return summarization
 
 #We propose using TextRank scores for the sentences to filter only to include sentences that have a TextRank score above a certain threshold.

@@ -1,22 +1,12 @@
-from sumy.parsers.plaintext import PlaintextParser
-from sumy.nlp.tokenizers import Tokenizer
-from sumy.summarizers.edmundson import EdmundsonSummarizer
-from sumy.summarizers.lsa import LsaSummarizer
-from sumy.summarizers.kl import KLSummarizer
-from sumy.summarizers.lex_rank import LexRankSummarizer
 import requests
 from bs4 import BeautifulSoup
-import pandas as pd
-import tarfile
-import io
-import json
-from rouge import Rouge
-import numpy as np
-import spacy
-import nltk
+from sumy.nlp.tokenizers import Tokenizer
+from sumy.parsers.plaintext import PlaintextParser
+from sumy.summarizers.edmundson import EdmundsonSummarizer
+from sumy.summarizers.kl import KLSummarizer
+from sumy.summarizers.lex_rank import LexRankSummarizer
+from sumy.summarizers.lsa import LsaSummarizer
 
-
-nltk.download('punkt', quiet=True)
 
 def summarize_text(text, num_sentences=3):
     parser = PlaintextParser.from_string(text, Tokenizer("english"))
@@ -71,66 +61,3 @@ def summarize_from_file(file_path, num_sentences=3):
     with open(file_path, 'r') as file:
         text = file.read()
     return summarize_text(text, num_sentences)
-
-# Initialize ROUGE
-rouge = Rouge()
-
-# Initialize summarizers
-edmundson = EdmundsonSummarizer()
-edmundson.bonus_words = ["important", "significant", "key", "central", "crucial"]
-edmundson.stigma_words = ["trivial", "minor", "unimportant", "insignificant"]
-edmundson.null_words = ["the", "a", "an", "in", "on", "at", "for", "of", "with"]
-
-summarizers = {
-    "Edmundson": edmundson,
-    "LSA": LsaSummarizer(),
-    "KL": KLSummarizer(),
-    "LexRank": LexRankSummarizer()
-}
-
-def generate_summary(text, summarizer, num_sentences=3):
-    parser = PlaintextParser.from_string(text, Tokenizer("english"))
-    summary = summarizer(parser.document, num_sentences)
-    return " ".join(str(sentence) for sentence in summary)
-
-def evaluate_summarizer(summarizer):
-    rouge_1_scores = []
-    rouge_2_scores = []
-    rouge_l_scores = []
-    
-    for _, row in data.iterrows():
-        full_text = row['summary']
-        reference_summary = row['title'] + ". " + " ".join(full_text.split()[:30])  # Use title and first 30 words as reference
-        generated_summary = generate_summary(full_text, summarizer)
-        
-        scores = rouge.get_scores(generated_summary, reference_summary)[0]
-        rouge_1_scores.append(scores['rouge-1']['f'])
-        rouge_2_scores.append(scores['rouge-2']['f'])
-        rouge_l_scores.append(scores['rouge-l']['f'])
-    
-    return np.mean(rouge_1_scores), np.mean(rouge_2_scores), np.mean(rouge_l_scores)
-
-# Load the Wikipedia Summary Dataset
-def load_wiki_summary_data(file_path, num_samples=10000):
-    with tarfile.open(file_path, "r:gz") as tar:
-        txt_file = [f for f in tar.getmembers() if f.name.endswith('.txt')][0]
-        with tar.extractfile(txt_file) as f:
-            content = io.TextIOWrapper(f, encoding='utf-8')
-            data = []
-            for i, line in enumerate(content):
-                if i >= num_samples:
-                    break
-                title, summary = line.strip().split('|||')
-                data.append({'title': title.strip(), 'summary': summary.strip()})
-    return pd.DataFrame(data)
-#data = load_wiki_summary_data('raw.tar.gz', num_samples=10000)
-#print(f"Loaded {len(data)} samples from the dataset.")
-
-def evaluate_summarizers():
-    # Evaluate each summarizer
-    results = {}
-    for name, summarizer in summarizers.items():
-        print(f"Evaluating {name} summarizer...")
-        rouge_1, rouge_2, rouge_l = evaluate_summarizer(summarizer)
-        results[name] = {'ROUGE-1': rouge_1, 'ROUGE-2': rouge_2, 'ROUGE-L': rouge_l}
-    return results
